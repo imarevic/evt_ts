@@ -103,7 +103,6 @@ evi_plt_men <- ggplot(evi_men, aes(x=k, y=xi, group=estimator, color=estimator))
   theme_classic() + scale_color_manual(values=c("#697CC3", "#DC801D", "#000000")) +
   labs(title = expression(paste(xi , " estimates for men")), x="k", y = expression(xi)) +
   theme(legend.justification="top", plot.title = element_text(hjust = 0.5))
-evi_plt_men
 
 # evi estimation for women
 evi_pick_w <- pickand_evi(w_arr)
@@ -126,17 +125,67 @@ evi_plt_women <- ggplot(evi_women, aes(x=k, y=xi, group=estimator, color=estimat
   theme_classic() + scale_color_manual(values=c("#697CC3", "#DC801D", "#000000")) +
   labs(title = expression(paste(xi , " estimates for women")), x="k", y = expression(xi)) +
   theme(legend.justification="top", plot.title = element_text(hjust = 0.5))
-evi_plt_women
 
 # combined evi plot
 plot_grid(evi_plt_men, evi_plt_women, nrow= 2)
 
 # end point estimation
-# TODO: implement a and b estimators
+# men
+source("ev_endpoint.R")
+end_m <- calc_endpoint(m_arr, xi_m)
+end_w <- calc_endpoint(w_arr, xi_w)
+colnames(end_m) <- c("k", "x_hat")
+colnames(end_w) <- c("k", "x_hat")
+end_m$competition <- "men"; end_w$competition <- "women"
+end_final <- rbind(end_m, end_w)
 
+# endpoints from stable region with SE (Dekkers et al. 1989)
+ep_stable_m <- filter(end_m, ((k>=320)&(k<=400))); ep_stable_mean_m <- mean(ep_stable_m$x_hat)
+ep_stable_w <- filter(end_w, ((k>=320)&(k<=380))); ep_stable_mean_w <- mean(ep_stable_w$x_hat)
+se_dekkers_m <- calc_se_dekkers(m_arr, xi_m) 
+se_dekkers_w <- calc_se_dekkers(w_arr, xi_w)
 
-# probability of non-official serve records
-# TODO: quantify probability of non-official serve speeds in relation to estimated endpoint
+# plot men and women endpoint estimates
+ep_plot <- ggplot(end_final, aes(x=k, y=x_hat, group=competition, color=competition)) +
+  geom_line(aes(linetype=competition)) + xlim(0, 400) + ylim(150, 300) +
+  geom_hline(yintercept=ep_stable_mean_m, linetype="dotdash", color = "#C01900") +
+  geom_hline(yintercept=ep_stable_mean_w, linetype="dotdash", color = "#C01900") +
+  theme_classic() + scale_color_manual(values=c("#697CC3", "#DC801D")) +
+  labs(title = expression(paste(hat(italic(x)), "* estimates")), x="k", y = expression(paste(hat(italic(x)), "*"))) +
+  theme(legend.justification="top", plot.title = element_text(hjust = 0.5))
+ep_plot
 
+# endpoints mean over all k with SE
+ep_overall_mean_m <- mean(end_m$x_hat)
+ep_overall_mean_w <- mean(end_w$x_hat)
+se_overall_m <- calc_se(end_m$x_hat)
+se_overall_w <- calc_se(end_w$x_hat)
 
+# check plausibility of unofficial records 
+# calculate upper bounds for each of the endpoint estimates (95%CI=1.96*SE)
+ube_dekkers_m <- ep_stable_mean_m + (se_dekkers_m*1.96)
+ube_dekkers_w <- ep_stable_mean_w + (se_dekkers_w*1.96)
+ube_overall_m <- ep_overall_mean_m + (se_overall_m*1.96)
+ube_overall_w <- ep_overall_mean_w + (se_overall_w*1.96)
 
+# quantify quality of world records
+ep_q_m <- calc_endpoint_quality(m_arr, xi_m)
+ep_q_w <- calc_endpoint_quality(w_arr, xi_w)
+colnames(ep_q_m) <- c("k", "Q")
+colnames(ep_q_w) <- c("k", "Q")
+ep_q_m$competition <- "men"; ep_q_w$competition <- "women"
+ep_q_final <- rbind(ep_q_m, ep_q_w)
+
+# absolute value of Q for men and women
+ep_q_abs_m <- exp(-mean(ep_q_m$Q)) 
+ep_q_abs_w <- exp(-mean(ep_q_w$Q)) 
+
+# plot Q over k
+ep_q_plot <- ggplot(ep_q_final, aes(x=k, y=Q, group=competition, color=competition)) +
+  geom_line(aes(linetype=competition)) + xlim(0, 400) + ylim(-0.2, 2) +
+  geom_hline(yintercept=ep_q_abs_m, linetype="dotdash", color = "#C01900") +
+  geom_hline(yintercept=ep_q_abs_w, linetype="dotdash", color = "#C01900") +
+  theme_classic() + scale_color_manual(values=c("#697CC3", "#DC801D")) +
+  labs(title = expression(paste(Q), " estimates"), x="k", y = expression(paste(Q), "*")) +
+  theme(legend.justification="top", plot.title = element_text(hjust = 0.5))
+ep_q_plot

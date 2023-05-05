@@ -2,7 +2,6 @@
 # ----- evt serve speed analysis ----- #
 # ------------------------------------ # 
 
-
 # ----- setup ----- #
 rm(list=ls())
 if (!require(tidyverse)) install.packages('tidyverse')
@@ -13,7 +12,7 @@ if (!require(cowplot)) install.packages('cowplot')
 if (!require(stringr)) install.packages('stringr')
 if (!require(evd)) install.packages('evd')
 if (!require(evir)) install.packages('evir')
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # asuming rstudio is used
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # assuming rstudio is used
 print(getwd())
 source('helpers.R')
 source('plotting.R')
@@ -65,18 +64,21 @@ df_women <- filter(df_final, competition == "women")
 m_arr = sort(df_men$serve_speed_final)
 w_arr = sort(df_women$serve_speed_final)
 # ----- fait tails inspection (qq-plot; em-plot (zipf); me-plot; ms-plot) ----- #
-# qplot against exponential (xi=0)
-evir::qplot(m_arr,xi=0)
-evir::qplot(w_arr,xi=0)
-# em plot
-emplot(m_arr,'xy')
-emplot(w_arr,'xy')
-# me plot
+# create a multiplot object to store 3 plots for each competition
+png("multiplot_q_zipf_me.png", width = 800, height = 400)
+par(mfrow = c(2, 3))
+# qplot against exponential (xi=0) ,em plot, and me pot for men
+evir::qplot(m_arr,xi=0, col="#697CC3", main=paste("QQ-Plot"))
+emplot(m_arr,'xy', col="#697CC3", main=paste("Zipf-Plot"))
 meplot(m_arr)
-meplot(w_arr)
-# ms plot
-ms_plot(m_arr)
-ms_plot(w_arr)
+# qplot against exponential (xi=0) ,em plot, and me pot for women
+evir::qplot(w_arr,xi=0, col="#DC801D")
+emplot(w_arr,'xy', col="#DC801D")
+meplot(w_arr, main=paste(""))
+dev.off() # close multiplot session
+
+# ms plot for p=4
+ms_plot_two_groups(m_arr, w_arr)
 
 # ----- evt modeling ----- #
 # tail index estimation (pickands, moments, ml, pwm) 

@@ -116,7 +116,9 @@ remove_duplicate_players <- function(df) {
   df$server[df$server=="Djere"]<-"Djere"
   df$server[df$server=="Federer "]<-"Federer"
   df$server[df$server=="Fish "]<-"Fish"
-  df$server[df$server=="Williams"]<-"Williams S."
+  df$server[df$server=="Williams"]<-"Williams S." 
+  df$server[df$server=="Williams _ NA"]<-"Williams S." 
+  
   
   df$server <- sapply(strsplit(df$server,"_ NA"), `[`, 1)
   df$server <- str_trim(df$server)

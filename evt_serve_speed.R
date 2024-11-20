@@ -12,6 +12,7 @@ if (!require(cowplot)) install.packages('cowplot')
 if (!require(stringr)) install.packages('stringr')
 if (!require(evd)) install.packages('evd')
 if (!require(evir)) install.packages('evir')
+if (!require(psych)) install.packages('psych')
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # assuming rstudio is used
 print(getwd())
 source('helpers.R')
@@ -52,7 +53,7 @@ df_final <- rbind(df_men_ordered, df_women_ordered)
 # ----- plot histogram of serve speed ----- #
 hist_speed <- ggplot(df_final, aes(x=serve_speed_final, fill=competition)) + 
   geom_histogram(bins=50, color="black", position="dodge") +
-  labs(x ="serve speed (km/h)", y = "frequency") +
+  labs(x ="serve speed maxima (km/h)", y = "frequency") +
   scale_fill_manual(values=c("#697CC3", "#DC801D")) +
   theme(legend.justification="top") +
   theme_classic()
@@ -68,13 +69,13 @@ w_arr = sort(df_women$serve_speed_final)
 png("multiplot_q_zipf_me.png", width = 800, height = 400)
 par(mfrow = c(2, 3))
 # qplot against exponential (xi=0) ,em plot, and me pot for men
-evir::qplot(m_arr,xi=0, col="#697CC3", main=paste("QQ-Plot"))
+evir::qplot(m_arr,xi=-0.5, col="#697CC3", main=paste("QQ-Plot"))
 emplot(m_arr,'xy', col="#697CC3", main=paste("Zipf-Plot"))
-meplot(m_arr)
+meplot(m_arr, main=paste("ME-Plot"), col="#697CC3")
 # qplot against exponential (xi=0) ,em plot, and me pot for women
-evir::qplot(w_arr,xi=0, col="#DC801D")
+evir::qplot(w_arr,xi=-0.5, col="#DC801D")
 emplot(w_arr,'xy', col="#DC801D")
-meplot(w_arr, main=paste(""))
+meplot(w_arr, main=paste(""), col="#DC801D")
 dev.off() # close multiplot session
 
 # ms plot for p=4
@@ -142,8 +143,8 @@ end_m$competition <- "men"; end_w$competition <- "women"
 end_final <- rbind(end_m, end_w)
 
 # endpoints from stable region with SE (Dekkers et al. 1989)
-ep_stable_m <- filter(end_m, ((k>=320)&(k<=400))); ep_stable_mean_m <- mean(ep_stable_m$x_hat)
-ep_stable_w <- filter(end_w, ((k>=320)&(k<=380))); ep_stable_mean_w <- mean(ep_stable_w$x_hat)
+ep_stable_m <- filter(end_m, ((k>=50)&(k<=100))); ep_stable_mean_m <- mean(ep_stable_m$x_hat)
+ep_stable_w <- filter(end_w, ((k>=50)&(k<=100))); ep_stable_mean_w <- mean(ep_stable_w$x_hat)
 se_dekkers_m <- calc_se_dekkers(m_arr, xi_m) 
 se_dekkers_w <- calc_se_dekkers(w_arr, xi_w)
 
@@ -188,6 +189,6 @@ ep_q_plot <- ggplot(ep_q_final, aes(x=k, y=Q, group=competition, color=competiti
   geom_hline(yintercept=ep_q_abs_m, linetype="dotdash", color = "#C01900") +
   geom_hline(yintercept=ep_q_abs_w, linetype="dotdash", color = "#C01900") +
   theme_classic() + scale_color_manual(values=c("#697CC3", "#DC801D")) +
-  labs(title = expression(paste(Q), " estimates"), x="k", y = expression(paste(Q), "*")) +
+  labs(title = expression(paste(italic(Q), " estimates")), x="k", y = expression(paste(italic(Q)))) +
   theme(legend.justification="top", plot.title = element_text(hjust = 0.5))
 ep_q_plot
